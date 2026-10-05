@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CNG Rush - The Ultimate Dhaka Traffic Challenge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,700&family=Hind+Siliguri:wght@500;700&family=Press+Start+2P&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div id="game-container">
+    <!-- Main Game Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Top HUD Overlay -->
+    <div id="hud" class="hud-layer hidden">
+      <!-- Left Panel: Meter, Passenger Notification, and Controls Info -->
+      <div class="hud-left-panel">
+        <!-- Meter Card -->
+        <div class="hud-card meter-card">
+          <div class="hud-label">FARE METER (টাকা)</div>
+          <div class="meter-display">
+            <span class="currency-symbol">৳</span>
+            <span id="meter-fare">0</span>
+          </div>
+          <div class="total-earnings">
+            Total: <span class="accent-text">৳<span id="hud-total-cash">0</span></span>
+          </div>
+        </div>
+
+        <!-- Passenger Notification Card (Positioned on Left Side) -->
+        <div id="passenger-card" class="hud-card passenger-card hidden">
+          <div class="passenger-header">
+            <div id="passenger-avatar" class="passenger-avatar">👨‍💼</div>
+            <div class="passenger-meta">
+              <div id="passenger-name" class="passenger-name">Sabbir (Office Goer)</div>
+              <div id="passenger-trait" class="passenger-trait">No Horn Bonus</div>
+            </div>
+            <div id="passenger-mood-emoji" class="mood-emoji">😊</div>
+          </div>
+
+          <!-- Patience & Trip Progress -->
+          <div class="progress-bars">
+            <div class="bar-group">
+              <span class="bar-label">Patience</span>
+              <div class="bar-track">
+                <div id="patience-fill" class="bar-fill patience-fill" style="width: 100%;"></div>
+              </div>
+            </div>
+            <div class="bar-group">
+              <span class="bar-label">Destination</span>
+              <div class="bar-track">
+                <div id="trip-fill" class="bar-fill trip-fill" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="passenger-bubble" class="passenger-bubble">
+            "Mama, Motijheel e jabo, ektu druto cholun!"
+          </div>
+        </div>
+
+        <!-- Control Information Card (Positioned on Left Side) -->
+        <div class="hud-card controls-card">
+          <div class="hud-label">CONTROLS (নিয়ন্ত্রণ)</div>
+          <div class="controls-list">
+            <div class="ctrl-row"><span><strong>W / ↑</strong> Accel</span><span><strong>S / ↓</strong> Brake/Rev</span></div>
+            <div class="ctrl-row"><span><strong>A / D</strong> Steer</span><span><strong>SPACE</strong> Horn 📢</span></div>
+            <div class="ctrl-row"><span><strong>C</strong> Camera 🎥</span><span><strong>P</strong> Pause</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: CNG Status & Shift Stats & Exit -->
+      <div class="hud-card vehicle-card">
+        <div class="top-actions-row">
+          <div class="hearts-row" id="hearts-container">
+            <span class="heart active">❤️</span>
+            <span class="heart active">❤️</span>
+            <span class="heart active">❤️</span>
+          </div>
+          <button id="btn-hud-exit" class="btn-icon-exit" title="Exit Shift">🛑 EXIT</button>
+        </div>
+        <div class="vehicle-stats">
+          <div class="stat-pill">
+            <span class="pill-label">CNG CONDITION</span>
+            <div class="bar-track mini">
+              <div id="health-fill" class="bar-fill health-fill" style="width: 100%;"></div>
+            </div>
+          </div>
+          <div class="stat-pill">
+            <span class="pill-label">LEVEL <span id="hud-level">1</span></span>
+            <span id="hud-weather" class="weather-badge">☀️ Clear</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Speedometer Bottom Bar -->
+    <div id="bottom-bar" class="bottom-bar hidden">
+      <div class="speed-cluster">
+        <div class="speed-value" id="hud-speed">0</div>
+        <div class="speed-unit">KM/H</div>
+      </div>
+      <div class="bottom-controls-right">
+        <button id="btn-camera-toggle" class="btn-camera">🎥 VIEW: DRIVER</button>
+        <div class="horn-counter">
+          <span class="horn-icon">📢</span>
+          <span id="hud-horn-count">0</span> honks
+        </div>
+      </div>
+    </div>
+
+    <!-- Start / Title Screen Overlay -->
+    <div id="start-screen" class="overlay-modal active">
+      <div class="modal-box title-modal">
+        <div class="rickshaw-art-banner">
+          <span class="bengali-title">সিএনজি রাশ</span>
+        </div>
+        <h1 class="game-logo">CNG RUSH</h1>
+        <p class="game-tagline">DHAKA CITY SURVIVAL &amp; TAXI SIMULATOR</p>
+        <div class="button-group">
+          <button id="btn-start" class="btn btn-primary btn-glow">START SHIFT (শুরু করুন)</button>
+          <button id="btn-audio-toggle" class="btn btn-secondary">🔊 SOUND: ON</button>
+          <button id="btn-exit-game" class="btn btn-danger">EXIT</button>
+        </div>
+
+        <div class="high-score-tag">
+          BEST DAILY EARNINGS: <span class="highlight-val">৳<span id="best-score-display">0</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exit Confirmation Modal Overlay -->
+    <div id="exit-modal" class="overlay-modal hidden">
+      <div class="modal-box">
+        <h2>EXIT SHIFT?</h2>
+        <p class="subtitle">Are you sure you want to end your driving shift and return to the depot?</p>
+        <div class="button-group vertical">
+          <button id="btn-confirm-exit" class="btn btn-danger">YES, EXIT SHIFT</button>
+          <button id="btn-cancel-exit" class="btn btn-secondary">CANCEL / KEEP DRIVING</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pause Screen Overlay -->
+    <div id="pause-screen" class="overlay-modal hidden">
+      <div class="modal-box">
+        <h2>SHIFT PAUSED</h2>
+        <p class="subtitle">Engine idling in Dhaka gridlock...</p>
+        <div class="button-group vertical">
+          <button id="btn-resume" class="btn btn-primary">RESUME DRIVING</button>
+          <button id="btn-pause-audio" class="btn btn-secondary">TOGGLE SOUND</button>
+          <button id="btn-quit" class="btn btn-danger">QUIT SHIFT</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Over / Shift Completed Screen Overlay -->
+    <div id="game-over-screen" class="overlay-modal hidden">
+      <div class="modal-box gameover-modal">
+        <div id="game-over-badge" class="game-over-badge">SHIFT OVER</div>
+        <h2 id="game-over-title">DAY'S WORK FINISHED!</h2>
+        <p id="game-over-reason" class="subtitle">You survived another day on Dhaka's wild avenues!</p>
+
+        <!-- Receipt breakdown -->
+        <div class="receipt-paper">
+          <div class="receipt-header">
+            <h3>DHAKA METRO AUTO METER</h3>
+            <span class="receipt-id">TOKEN #<span id="receipt-id">4891</span></span>
+          </div>
+          <div class="receipt-divider">--------------------------------</div>
+          <div class="receipt-row">
+            <span>Trips Completed:</span>
+            <span id="rec-trips" class="rec-val">0</span>
+          </div>
+          <div class="receipt-row">
+            <span>Base Fares:</span>
+            <span class="rec-val">৳<span id="rec-base">0</span></span>
+          </div>
+          <div class="receipt-row">
+            <span>Customer Tips:</span>
+            <span class="rec-val">৳<span id="rec-tips">0</span></span>
+          </div>
+          <div class="receipt-row">
+            <span>Smooth Driving Bonus:</span>
+            <span class="rec-val">৳<span id="rec-bonus">0</span></span>
+          </div>
+          <div class="receipt-row penalty">
+            <span>Collision Penalties:</span>
+            <span class="rec-val">-৳<span id="rec-penalties">0</span></span>
+          </div>
+          <div class="receipt-divider">================================</div>
+          <div class="receipt-row total">
+            <span>NET EARNINGS:</span>
+            <span class="rec-val highlight">৳<span id="rec-total">0</span></span>
+          </div>
+          <div class="receipt-row best">
+            <span>Today's Best Record:</span>
+            <span class="rec-val">৳<span id="rec-best">0</span></span>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button id="btn-restart" class="btn btn-primary btn-glow">DRIVE AGAIN (আবার চালান)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- On-screen Floating Text Container -->
+    <div id="floating-notifications" class="floating-notifications"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/sprites.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/road.js"></script>
+  <script src="js/traffic.js"></script>
+  <script src="js/passengers.js"></script>
+  <script src="js/game.js"></script>
+</body>
+
+</html>
